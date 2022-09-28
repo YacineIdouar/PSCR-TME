@@ -35,11 +35,9 @@ public:
 
 	void push_back (const std::string& val) ;
 
-	void push_front (const std::string& val) {
-		tete = new Chainon(val,tete);
-	}
+	void push_front (const std::string& val);
 
-	bool empty() ;
+	bool empty(){return tete == nullptr;} ;
 
 	size_t size() const ;
 };
