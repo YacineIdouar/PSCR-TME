@@ -1,7 +1,7 @@
-Question 1 : Le nombre de mots dans le code = 
-Question 2 : Le nombre de mots différents = 
+Question 1 : Le nombre de mots dans le code =  566193
+Question 2 : Le nombre de mots différents = 20333
                
-Question 3: "toto" =    
-            "war" = 
-            "peace" = 
+Question 3: "toto" = 0   
+            "war" = 298
+            "peace" = 114
 Question 4  : On peut utiliser une table de hashage.

@@ -3,7 +3,8 @@
 #pragma once 
 #include<cstddef>
 #include <vector>
-
+#include <forward_list>
+#include <ostream>
 template<typename K, typename V> 
 
 class hashT{
@@ -11,64 +12,62 @@ class hashT{
     // Création de la paire clé/value
     class entryK{
         public:
-            const K key;
+            K key;
             V value;
 
             // Constructeur pour la class entryK
-            entryK (const K ket,V value){
+            entryK (K ket,V value){
                 this->key = key;
                 this->value = value;
             }
             
      };
      
-    //typedef des structures intéressante !! 
-    typedef std::forward_list<entryK> list_t;
-    typedef std::vector<list_t> bucket_t; // Définiton de la structure contenant la table de hash       
+    //typedef des structures
+    typedef std::vector<std::forward_list<entryK> > bucket_t; // Définiton de la structure contenant la table de hash       
 
      bucket_t buckets;
      size_t init;
 
      public :
      // Constructeur
-     hashT(size_t init = 100){
-        buckets.reserve(init); // 
+     hashT(size_t init){
+        this->init = init;
+        buckets.reserve(init); 
         for (size_t i =0; i < init;i++ ){
-            buckets.push_back(list_t); // On initialise la table avec des list vides 
+            std::forward_list<entryK> list;
+            buckets.push_back(list); // On initialise la table avec des listes vides 
         }   
      }
-     // Accesseur à l'adresse du pointeur de la valeur qui contient key en clé. 
-     V* get (const K& key){
-        size_t indice = std::hash<K>()(key) % buckets.size(); // On récupère l'indice de la clé key dans la table.
 
-        // Poineteur sur "Kentry" pour parcourirs la liste des couples
-        entryK* parcours;
+     // Accesseur à l'adresse du pointeur de la valeur qui contient key. 
+     V* get (K key){
 
-        for (parcours = buckets[indice] ; parcours ; ){
-            if ((parcours->key) == key) // Si on retrouve la valeur key dans la list oon break la boucle 
-                break;
-            // Sinon on avance 
-            parcours = parcours->iterator;
+        size_t indice = (std::hash<K>()(key)) % buckets.size(); // On récupère l'indice de la clé key dans la table.
+        // On cherche dans la forward_list d'indice de l'élement !
+        auto it = buckets[indice].begin();
+        for (;it!=buckets[indice].end();it++){ 
+            if(it->key==key){
+                return &(it->value);
+            }
         }
-        return parcours;
+        return nullptr;
      }
 
-bool put (const K& key, const V& value){
 
+bool put (K key,V value){
+   
     // On calcile l'indice dans la table de la clé 
     int indice = std::hash<K>()(key) % buckets.size();
-    entryK* parcours = buckets[indice];
-    while (parcours)
-    {
-        if (parcours->key == key){
-            parcours->value = value;
-            return true;
+    for (auto elem : buckets[indice]){        
+            if (elem.key==key){
+                elem.value = value;
+                return true;
+            }
         }
-    }
     // On insère le nouvel élement dans son bucket !!
-    buckets[indice].push_front(new entryK (ket,value));
+    buckets[indice].push_front(entryK (key,value));
     return false;
-
 }
     
 };

@@ -4,6 +4,7 @@
 #include <chrono>
 #include <vector>
 #include <string>
+#include"hashT.hh"
 
 
 
@@ -12,11 +13,16 @@ int main () {
 	using namespace std::chrono;
 
 	// définiton du vecteur de mots différents.
-	vector<string> vecteur_mots_diff ;
-	int nombre_mots_diff = 0;
+
+	/*vector<string> vecteur_mots_diff ;
+	int nombre_mots_diff = 0;*/
 
 	// Définition du vecteur de pair
-	vector<pair<string,int>> vecteurs_pair;
+	vector<pair<string,int>> vecteur_pair;
+	int nombre_mots_diff = 0;
+
+	// On utilise la table de Hash
+	hashT<string,int> table_hash (10000);
 
 	ifstream input = ifstream("./WarAndPeace.txt");
 	auto start = steady_clock::now();
@@ -40,45 +46,47 @@ int main () {
 			cout << nombre_lu << ": "<< word << endl;
 		nombre_lu++;
 
-		// Modif du code 
-		if (find(vecteur_mots_diff.begin(),vecteur_mots_diff.end(),word)==vecteur_mots_diff.end()){
-			
-				// Incrémentation du competur des mots différents
+		//Modification du code 
+
+		// Trouver si le mot existe dans la liste des pairs 
+		//auto it = find_if(vecteur_pair.begin(),vecteur_pair.end(),[word](auto& a){return a.first==word ;});
+
+		// Trouver le mot dans la table 
+		int* valeur = table_hash.get(word);
+		if(valeur==nullptr){
+			table_hash.put(word,1);
+		} 
+		else{
+			(*valeur)++;
+		}
+
+
+		/*if (it==vecteur_pair.end()){
+				// Incrémentation du competur des mots différents + ajout du nouveau mot dans la liste
 				nombre_mots_diff++;
-				vecteur_mots_diff.push_back(word);
+				vecteur_pair.push_back(make_pair(word,1));
 			}
 
-
-
-		// recherche de paire
-		size_t i;
-		for(i=0;i<vecteurs_pair.size();++i){
-			if (vecteurs_pair[i].first == word){
-				vecteurs_pair[i].second ++;
-			}
-		}
-		// ajout de pair dans le vecteur si mot non trouvé !!
-		if (i==vecteurs_pair.size()){
-			vecteurs_pair.push_back(make_pair(word,1));
-		}
-			
-		
+		else{
+			// Incrémentation du nombre d'apparition du mot
+			it->second++;
+		}	*/
 	}
 	// Fermeture du fichie
 	input.close();
 
 
-	for(size_t i=0;i<vecteurs_pair.size();++i){
-			if (vecteurs_pair[i].first == "toto"){
-				cout << "nombre apparition de toto " << vecteurs_pair[i].second << endl;
+	/*for(size_t i=0;i<vecteur_pair.size();++i){
+			if (vecteur_pair[i].first == "toto"){
+				cout << "nombre apparition de toto " << vecteur_pair[i].second << endl;
 			}
-			if (vecteurs_pair[i].first == "war"){
-				cout << "nombre apparition de war " << vecteurs_pair[i].second << endl;
+			if (vecteur_pair[i].first == "war"){
+				cout << "nombre apparition de war " << vecteur_pair[i].second << endl;
 			}
-			if (vecteurs_pair[i].first == "peace"){
-				cout << "nombre apparition de peace" << vecteurs_pair[i].second << endl;
+			if (vecteur_pair[i].first == "peace"){
+				cout << "nombre apparition de peace " << vecteur_pair[i].second << endl;
 			}
-	}
+	}*/
 
 	cout << "Finished Parsing War and Peace" << endl;
 
