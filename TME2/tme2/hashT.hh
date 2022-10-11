@@ -63,7 +63,6 @@ bool put (K key,V value){
         for (;it!=buckets[indice].end();it++){ 
             if(it->key==key){
                 it->value++;
-                std::cout << "la valeur du mot : " << it->key << " : " << it->value << std::endl;
                 return true;
             }
         }
