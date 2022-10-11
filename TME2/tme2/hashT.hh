@@ -16,7 +16,7 @@ class hashT{
             V value;
 
             // Constructeur pour la class entryK
-            entryK (K ket,V value){
+            entryK (K key,V value){
                 this->key = key;
                 this->value = value;
             }
@@ -57,11 +57,13 @@ class hashT{
 
 bool put (K key,V value){
    
-    // On calcile l'indice dans la table de la clé 
+    // On calcule l'indice dans la table de la clé 
     int indice = std::hash<K>()(key) % buckets.size();
-    for (auto elem : buckets[indice]){        
-            if (elem.key==key){
-                elem.value = value;
+    auto it = buckets[indice].begin();
+        for (;it!=buckets[indice].end();it++){ 
+            if(it->key==key){
+                it->value++;
+                std::cout << "la valeur du mot : " << it->key << " : " << it->value << std::endl;
                 return true;
             }
         }

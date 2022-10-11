@@ -22,7 +22,7 @@ int main () {
 	int nombre_mots_diff = 0;
 
 	// On utilise la table de Hash
-	hashT<string,int> table_hash (10000);
+	hashT<string,int> table_hash (1000);
 
 	ifstream input = ifstream("./WarAndPeace.txt");
 	auto start = steady_clock::now();
@@ -52,13 +52,8 @@ int main () {
 		//auto it = find_if(vecteur_pair.begin(),vecteur_pair.end(),[word](auto& a){return a.first==word ;});
 
 		// Trouver le mot dans la table 
-		int* valeur = table_hash.get(word);
-		if(valeur==nullptr){
-			table_hash.put(word,1);
-		} 
-		else{
-			(*valeur)++;
-		}
+		table_hash.put(word,1);
+		
 
 
 		/*if (it==vecteur_pair.end()){
