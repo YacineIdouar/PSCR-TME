@@ -24,16 +24,15 @@ void operation_thread(pr::Banque & maBanque){
 	int montant = rand()%100;
 	// On sécurise l'opération
 	
-	/*if (crediteur < debiteur){
+	if (crediteur < debiteur){
 		maBanque[crediteur].getMutex().lock();
 		maBanque[debiteur].getMutex().lock();
 	}else {
 		maBanque[debiteur].getMutex().lock();
 		maBanque[crediteur].getMutex().lock();
-	}*/
+	}
 	
 	// On réalise des lock avec l'ordre du système 
-	lock(maBanque[crediteur].getMutex(),maBanque[debiteur].getMutex());
 	maBanque.transfert(crediteur,debiteur,montant);
 	// On débloque les compte 
 	maBanque[crediteur].getMutex().unlock();
