@@ -6,6 +6,9 @@ using namespace std;
 
 namespace pr {
 
+Compte& Banque::operator[] (const int index){
+		return comptes[index];
+}
 void Banque::transfert(size_t deb, size_t cred, unsigned int val) {
 	Compte & debiteur = comptes[deb];
 	Compte & crediteur = comptes[cred];
@@ -19,13 +22,16 @@ size_t Banque::size() const {
 bool Banque::comptabiliser (int attendu) const {
 	int bilan = 0;
 	int id = 0;
-	for (const auto & compte : comptes) {
+	for (auto & compte : comptes) {
+		compte.getMutex().lock();
 		if (compte.getSolde() < 0) {
 			cout << "Compte " << id << " en négatif : " << compte.getSolde() << endl;
 		}
 		bilan += compte.getSolde();
 		id++;
 	}
+	for (auto & compte : comptes){compte.getMutex().unlock();}
+
 	if (bilan != attendu) {
 		cout << "Bilan comptable faux : attendu " << attendu << " obtenu : " << bilan << endl;
 	}
