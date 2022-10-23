@@ -4,9 +4,11 @@ using namespace std;
 
 namespace pr {
 void Compte::crediter (unsigned int val) {
+	std::unique_lock <std::recursive_mutex> lk(m);
 	solde+=val ;
 }
 bool Compte::debiter (unsigned int val) {
+	std::unique_lock <std::recursive_mutex> lk(m);
 	bool doit = solde >= val;
 	if (doit) {
 		solde-=val ;
@@ -14,6 +16,7 @@ bool Compte::debiter (unsigned int val) {
 	return doit;
 }
 int Compte::getSolde() const  {
+	std::unique_lock <std::recursive_mutex> lk(m);
 	return solde;
 }
 // NB : vector exige Copyable, mais mutex ne l'est pas...
@@ -22,7 +25,7 @@ Compte::Compte(const Compte & other) {
 	solde = other.solde;
 	other.m.unlock();
 }
-mutex& Compte::getMutex(){
+recursive_mutex& Compte::getMutex(){
 	return m;
 }
 

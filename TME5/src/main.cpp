@@ -6,6 +6,7 @@
 #include <fstream>
 #include <limits>
 #include <random>
+#include "Pool.h"
 
 using namespace std;
 using namespace pr;
@@ -101,6 +102,71 @@ void exportImage(const char * path, size_t width, size_t height, Color * pixels)
 // NB : en francais pour le cours, preferez coder en english toujours.
 // pas d'accents pour eviter les soucis d'encodage
 
+// Ajout de la classe barrière pour controler les threads
+class Barrier{
+private:
+    int Nombre_taches;
+    int cpt;
+    std::mutex m;
+    std::condition_variable cv;
+
+public:
+    Barrier(int n) : Nombre_taches(n), cpt(0) {};
+    void waitFor(){
+        std::unique_lock<std::mutex> l(m);
+        while (cpt<Nombre_taches)
+        {
+            cv.wait(l);
+        }
+    }
+
+    void done(){
+        std::unique_lock<std::mutex> l (m);
+        ++ cpt;
+        if(cpt==Nombre_taches){cv.notify_all();}
+    }
+};
+
+
+class SleepJob : public Job {
+	const Scene& scene;
+	const Scene::screen_t & screen;
+	vector<Vec3D>& lights;
+	Color * pixels;
+	Barrier& barrier;
+public :
+	SleepJob(Scene& scene,const Scene::screen_t & screen,vector<Vec3D> lights,Color * pixels,Barrier& barrier) :scene(scene),screen(screen),lights(lights),pixels(pixels),barrier(barrier) {}
+	void run () {
+		barrier.done();
+		for (int x =0 ; x < scene.getWidth() ; x++) {
+		for (int  y = 0 ; y < scene.getHeight() ; y++) {
+			// le point de l'ecran par lequel passe ce rayon
+			auto & screenPoint = screen[y][x];
+			// le rayon a inspecter
+			Rayon  ray(scene.getCameraPos(), screenPoint);
+
+			int targetSphere = findClosestInter(scene, ray);
+
+			if (targetSphere == -1) {
+				// keep background color
+				continue ;
+			} else {
+				const Sphere & obj = *(scene.begin() + targetSphere);
+				// pixel prend la couleur de l'objet
+				Color finalcolor = computeColor(obj, ray, scene.getCameraPos(), lights);
+				// le point de l'image (pixel) dont on vient de calculer la couleur
+				Color & pixel = pixels[y*scene.getHeight() + x];
+				// mettre a jour la couleur du pixel dans l'image finale.
+				pixel = finalcolor;
+			}
+
+		}
+	}
+	}
+};
+
+
+
 int main () {
 
 	std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
@@ -126,30 +192,14 @@ int main () {
 	Color * pixels = new Color[scene.getWidth() * scene.getHeight()];
 
 	// pour chaque pixel, calculer sa couleur
-	for (int x =0 ; x < scene.getWidth() ; x++) {
-		for (int  y = 0 ; y < scene.getHeight() ; y++) {
-			// le point de l'ecran par lequel passe ce rayon
-			auto & screenPoint = screen[y][x];
-			// le rayon a inspecter
-			Rayon  ray(scene.getCameraPos(), screenPoint);
+	Barrier barrier(1920);
+	Pool* pool = new Pool(1920);
+	pool->start(12);
+	pool->submit(new SleepJob(scene,screen,lights,pixels,barrier));
+	barrier.waitFor();
+	pool->stop();
 
-			int targetSphere = findClosestInter(scene, ray);
 
-			if (targetSphere == -1) {
-				// keep background color
-				continue ;
-			} else {
-				const Sphere & obj = *(scene.begin() + targetSphere);
-				// pixel prend la couleur de l'objet
-				Color finalcolor = computeColor(obj, ray, scene.getCameraPos(), lights);
-				// le point de l'image (pixel) dont on vient de calculer la couleur
-				Color & pixel = pixels[y*scene.getHeight() + x];
-				// mettre a jour la couleur du pixel dans l'image finale.
-				pixel = finalcolor;
-			}
-
-		}
-	}
 
 	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 	    std::cout << "Total time "
