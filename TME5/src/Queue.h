@@ -5,6 +5,7 @@
 #include <cstring>
 #include <mutex>
 #include <condition_variable>
+#include <iostream>
 namespace pr {
 
 // MT safe version of the Queue, non blocking.
@@ -22,10 +23,12 @@ class Queue {
 	bool empty() const {
 		return sz == 0;
 	}
+	
 	bool full() const {
+		
 		return sz == allocsize;
 	}
-public:
+	public:
 	Queue(size_t size) :allocsize(size), begin(0), sz(0) {
 		tab = new T*[size];
 		memset(tab, 0, size * sizeof(T*));
@@ -40,7 +43,7 @@ public:
 			cv.wait(lg);
 		}
 		if (empty() && !block) {return nullptr;}
-		cv.notify_one();
+		cv.notify_all();
 		auto ret = tab[begin];
 		tab[begin] = nullptr;
 		sz--;
@@ -53,7 +56,7 @@ public:
 			cv.wait(lg);
 		}
 		if (full() && !block){return false;}
-		cv.notify_one();
+		cv.notify_all();
 		tab[(begin + sz) % allocsize] = elt;
 		sz++;
 		return true;

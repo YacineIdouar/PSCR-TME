@@ -11,7 +11,7 @@ namespace pr {
 void poolWorker(Queue<Job> &queue){
 	while (true){
 		Job* j = queue.pop();
-		if (j==nullptr){ break;}
+		if (j==nullptr){return;}
 		j->run();
 		delete j;
 	}
@@ -20,7 +20,7 @@ class Pool {
 	Queue<Job> queue;
 	std::vector<std::thread> threads;
 public:
-	Pool(int qsize) : queue(qsize){}
+	Pool(size_t qsize) : queue(qsize){}
 
 	void start (int nbthread){
 		for (int i=0;i<nbthread;i++){
@@ -28,8 +28,7 @@ public:
 		}
 	}
 	void submit (Job * job){
-		for (int i=0;i<queue.size();i++)
-			queue.push(job);
+		queue.push(job);
 	}
 	void stop(){
 		queue.setBlock(false);

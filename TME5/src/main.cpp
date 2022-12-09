@@ -6,6 +6,7 @@
 #include <fstream>
 #include <limits>
 #include <random>
+#include <chrono>
 #include "Pool.h"
 
 using namespace std;
@@ -129,17 +130,19 @@ public:
 
 
 class SleepJob : public Job {
+	int x;
 	const Scene& scene;
 	const Scene::screen_t & screen;
 	vector<Vec3D>& lights;
 	Color * pixels;
 	Barrier& barrier;
+	
 public :
-	SleepJob(Scene& scene,const Scene::screen_t & screen,vector<Vec3D> lights,Color * pixels,Barrier& barrier) :scene(scene),screen(screen),lights(lights),pixels(pixels),barrier(barrier) {}
+	SleepJob(int x, Scene& scene,const Scene::screen_t & screen,vector<Vec3D> lights,Color * pixels,Barrier& barrier) :x(x) ,scene(scene),screen(screen),lights(lights),pixels(pixels),barrier(barrier) {}
 	void run () {
-		barrier.done();
-		for (int x =0 ; x < scene.getWidth() ; x++) {
+		
 		for (int  y = 0 ; y < scene.getHeight() ; y++) {
+			
 			// le point de l'ecran par lequel passe ce rayon
 			auto & screenPoint = screen[y][x];
 			// le rayon a inspecter
@@ -161,7 +164,7 @@ public :
 			}
 
 		}
-	}
+		barrier.done();
 	}
 };
 
@@ -191,13 +194,19 @@ int main () {
 	// Les couleurs des pixels dans l'image finale
 	Color * pixels = new Color[scene.getWidth() * scene.getHeight()];
 
-	// pour chaque pixel, calculer sa couleur
-	Barrier barrier(1920);
-	Pool* pool = new Pool(1920);
+	// Création de la barrière
+	Barrier barrier(scene.getWidth());
+	// Création du pool de thread
+	Pool* pool = new Pool(scene.getWidth());
+
 	pool->start(12);
-	pool->submit(new SleepJob(scene,screen,lights,pixels,barrier));
+	for (int x =0 ; x < scene.getWidth() ; x++) {
+	pool->submit(new SleepJob(x,scene,screen,lights,pixels,barrier));
+	}
+
 	barrier.waitFor();
 	pool->stop();
+
 
 
 
