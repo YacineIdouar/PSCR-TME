@@ -1,77 +1,60 @@
-
-#define _GNU_SOURCE
-#include <unistd.h>
-#include<iostream>
+#include<sys/types.h>
+#include<unistd.h>
 #include<stdlib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <string.h>
-#include<string>
+#include<stdio.h>
+#include<string.h>
+#include <fcntl.h>              
 
+int main (int argc, char* argv[]){
+    // Création du pipe 
+    int fd[2];
+    pipe(fd);// fd contient les deux extrémité du pipe
 
-using namespace std;
+    char* buff[argc];
 
-int main (int argc, char** argv){
+     // On doit séparer les arguments !
 
-    // On crée un tableau de file descriptor 
-    int pipeFd[2];
-    
-    if (pipe(pipeFd)==-1){
-        perror("Erreur du pipe");
-        exit(-1);
+     int cpt = 1;
+     int i= 0;
+
+     while (strcmp(argv[cpt],"@")!=0){
+        buff[i] = strdup(argv[cpt]);     
+        i++;
+        cpt++;
+     }
+
+     // Le buffer contient les arguments de la première commande 
+     buff[i] = NULL;    
+    // On avance i et cpt pour avoir les prochians arguments ! 
+    cpt ++;
+    int path2 = cpt;
+    i = 0; 
+    char* buff2[argc];
+    while (cpt < argc)
+    {   
+        buff2[i] = strdup(argv[cpt]);
+        cpt++;
+        i++ ;       
     }
+    buff2[i] = NULL;
+    i=0;
 
-    // On sépare les arguments dans le main
-
-    int cpt = 0;
-    int parcours = 2;
-        while(strcmp(argv[2], "_")){
-            cpt++;
-            parcours++;
+    if (fork()==0){
+        dup2(fd[1],STDOUT_FILENO);
+        close(fd[0]);
+        if (execv(argv[1],buff) <0){
+            perror("fail exec");
         }
-        // cpt => contient le nombre d'argument de 1
-        int addPath2 = parcours+1;// parcours l'indice contient le path de f2
-
-
-        // On récupère le taille des arguments
-        char**  argument1 = new char*[cpt+1];
-
-        for (int j=0;j<cpt;j++){
-            argument1[j] = argv[2+j];
-        }
-        argument1[cpt] = NULL; // Liste des arguments de la première function qui sont prêt
-
-        char** argument2 = new char*[argc-parcours+1];
-        int i =0;
-        while( parcours < argc){
-            argument2[i]= argv[parcours];
-            i++;
-            parcours++;
-        }
-        argument2[i+1] = NULL;// Lise des arguments de la deuxième function sont prêt 
-
-
-
-    if (fork() == 0){
-        dup2(pipeFd[1],STDOUT_FILENO);// On modifie l'entrée standard 
-        close(pipeFd[0]);
-        // On récupère les argument du premier exec
-        if (execv(argv[2],argument1)==-1){
-            perror("Erreur lancement fun1");
-        };
     }
 
     if (fork()==0){
-        dup2(pipeFd[0],STDIN_FILENO);
-        close(pipeFd[1]);
-        if (execv(argv[addPath2],argument2)==-1){
-            perror("Erreur lancement fun2");
-        };
-
+        dup2(fd[0],STDIN_FILENO);
+        close(fd[1]);
+        if (execv(argv[path2],buff2) <0){
+            perror("fail exec2");
+        }
     }
-
-    return 0;
     
+    return 0;
+
 }
-
-
