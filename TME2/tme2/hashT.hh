@@ -33,15 +33,7 @@ class hashT{
     typedef typename std::vector<std::forward_list<entryK>>::iterator vect_it_t;
     typedef typename std::forward_list<entryK>::iterator fl_it_t;
 
-    class Iterator{
-       vect_it_t vertical_it;
-       fl_it_t horizontal_it;
-       // Constructeur de la classe
-       Iterator(vect_it_t vect, fl_it_t forl){
-        vertical_it = vect;
-        horizontal_it = forl;
-       } 
-     };
+    
 
      bucket_t buckets;
      size_t init;
@@ -89,28 +81,55 @@ bool put (K key,V value){
 }
 
 // Défintion des itérateurs
+
+class Iterator{
+       vect_it_t vertical_it;
+       fl_it_t horizontal_it;
+       vect_it_t buckend;
+       // Constructeur de la classe
+       Iterator(vect_it_t vect, fl_it_t forl,vect_it_t end){
+        vertical_it = vect;
+        horizontal_it = forl;
+        buckend = end;
+       } 
+     
 Iterator begin(){
-    return Iterator(buckets.begin(),buckets.begin().begin());
+    // Recherche de la première liste non-vide 
+    vect_it_t vit;
+    while(vit->empty() && vit!= buckets.end())
+        ++vit;
+    if (vit != buckets.end())
+        return Iterator(vit,vit->begin(),buckets.end());
 }
-Iterator end (){
-    return nullptr;
+Iterator end(){
+    return Iterator(buckets.end(),buckets.front.end(),buckets.end());
 }
 
-Iterator& operator ++ (Iterator it){
-    if (++it.horizontal_it != it.horizontal_it.end()){
-        return it.horizontal_it;
-    }
-    else{
-        if(++it.vertical_it != it.vertical_it.end()){
-            it.horizontal_it = it.vertical_it.begin();
-            return it.horizontal_it;
+Iterator& operator ++ (){
+    ++horizontal_it;
+    if(horizontal_it == vertical_it->end()){
+        ++vertical_it;
+        while (vertical_it->empty() && vertical_it !=buckend)
+        {
+            ++vertical_it;
         }
     }
-    return it.end();
+    if (vertical_it != buckend){
+        horizontal_it = vertical_it->begin();
+    }
+    return *this;
+}
+
+entryK& operator* (){
+    return *horizontal_it;
+}
+
+bool operator!=(Iterator other){
+    return vertical_it != other.vertical_it || horizontal_it != other.horizontal_it;
 }
     
 };
-    
+};   
     
 
     
